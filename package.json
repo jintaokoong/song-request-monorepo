@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "server": "yarn --cwd server dev",
+    "client": "yarn --cwd client dev"
+  },
+  "workspaces": ["server", "client"]
+}
