@@ -2,7 +2,11 @@
   "private": true,
   "scripts": {
     "server": "yarn --cwd server dev",
-    "client": "yarn --cwd client dev"
+    "client": "yarn --cwd client dev",
+    "build:client": "yarn --cwd client build"
   },
-  "workspaces": ["server", "client"]
+  "workspaces": [
+    "server",
+    "client"
+  ]
 }
