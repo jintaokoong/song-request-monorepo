@@ -19,12 +19,14 @@
     "ramda": "^0.28.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "uuid": "^8.3.2",
     "zod": "^3.17.10"
   },
   "devDependencies": {
     "@types/ramda": "^0.28.15",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
+    "@types/uuid": "^8.3.4",
     "@vitejs/plugin-react": "^2.0.0",
     "autoprefixer": "^10.4.8",
     "postcss": "^8.4.16",

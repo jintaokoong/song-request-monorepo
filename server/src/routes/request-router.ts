@@ -16,6 +16,11 @@ const FindRequestSchema = Type.Object({
   cursor: Type.Optional(Type.String()),
 });
 
+const CreateRequestSchema = Type.Object({
+  title: Type.String(),
+  requester: Type.Optional(Type.String()),
+});
+
 const SingleRequestQuerySchema = Type.Object({
   id: Type.String(),
 });
@@ -80,6 +85,22 @@ const requestRouter: FastifyPluginCallback<
         .then(() => rep.send({}));
     }
   );
+
+  api.post("/", { schema: { body: CreateRequestSchema } }, (req, rep) => {
+    const now = new Date();
+    const key = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const requester = req.body.requester || "系統";
+    return api.prisma.request.create({
+      data: {
+        key: key,
+        title: req.body.title,
+        requester,
+        done: false,
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+  });
 
   api.post("/generate", { schema: { tags: ["request"] } }, (req, res) => {
     const createdAt = date.getRandomDate(new Date(2022, 6, 1), new Date());

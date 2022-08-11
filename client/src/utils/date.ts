@@ -1,8 +1,13 @@
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 
-const getLocalDate = (date: string) => {
+const getLocalDate = (date: string | Date) => {
   const day = dayjs(date);
-  return day.format('YYYY-MM-DD');
-}
+  return day.format("YYYY-MM-DD");
+};
 
-export default { getLocalDate }
+const isoStringToMilliseconds = (date: string) => {
+  const day = dayjs(date);
+  return day.valueOf();
+};
+
+export default { getLocalDate, isoStringToMilliseconds };
