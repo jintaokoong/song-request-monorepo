@@ -13,6 +13,7 @@ import { PrismaClient } from '@prisma/client';
 import { prisma } from '@/configurations/prisma';
 import fastifyCors from '@fastify/cors';
 import configRouter from '@/routes/config-router';
+import { defaultTo, pipe } from 'ramda';
 
 // Use TypeScript module augmentation to declare the type of server.prisma to be PrismaClient
 declare module 'fastify' {
@@ -22,6 +23,9 @@ declare module 'fastify' {
 }
 
 dotenv.config();
+
+const PORT = parseInt(process.env.PORT || '4000', 10);
+const HOST = PORT === 4000 ? '127.0.0.1' : '0.0.0.0';
 
 const prismaPlugin: FastifyPluginAsync = fp(async (server, options) => {
   await prisma.$connect();
@@ -55,11 +59,6 @@ app.register(swagger, {
         },
       },
     },
-    servers: [
-      {
-        url: 'http://localhost:4000',
-      },
-    ],
   },
   exposeRoute: true,
 });
@@ -69,6 +68,6 @@ app.register(configRouter, { prefix: '/api/config' });
 app.register(requestRouter, { prefix: '/api/requests' });
 app.register(rootRouter);
 
-app.listen({ port: 4000 }).then((address) => {
+app.listen({ port: PORT, host: HOST }).then((address) => {
   console.log(`✨  server listening on ${address}`);
 });

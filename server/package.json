@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --noEmit && swc src -d dist",
+    "start": "node dist/index.js",
     "dev": "node -r @swc-node/register src/index.ts"
   },
   "devDependencies": {
