@@ -2,12 +2,12 @@ import {
   FastifyPluginCallback,
   FastifyPluginOptions,
   RawServerBase,
-} from "fastify";
-import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
-import date from "../../utils/date";
-import { faker } from "@faker-js/faker";
-import { Type } from "@sinclair/typebox";
-import { last, tail } from "ramda";
+} from 'fastify';
+import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+import date from '../../utils/date';
+import { faker } from '@faker-js/faker';
+import { Type } from '@sinclair/typebox';
+import { last, tail } from 'ramda';
 
 const FindRequestSchema = Type.Object({
   limit: Type.Number({
@@ -33,16 +33,31 @@ const requestRouter: FastifyPluginCallback<
   RawServerBase,
   TypeBoxTypeProvider
 > = (api, opt, done) => {
+  api.addHook('preHandler', function (req, rep, done) {
+    const key = req.headers['x-api-key'];
+    if (typeof key !== 'string') {
+      rep.code(401);
+      return done(new Error('Unauthorized'));
+    }
+    const envKeys = process.env.API_KEY || '[]';
+    const authorizedKeys = new Set(envKeys.split(','));
+    if (!key || !authorizedKeys.has(key)) {
+      rep.code(401);
+      return done(new Error('Unauthorized'));
+    }
+    done();
+  });
+
   api.get(
-    "/",
-    { schema: { tags: ["request"], querystring: FindRequestSchema } },
+    '/',
+    { schema: { tags: ['request'], querystring: FindRequestSchema } },
     (req, resp) => {
       return api.prisma.request
         .findMany({
           cursor: req.query.cursor ? { id: req.query.cursor } : undefined,
           take: req.query.limit,
           skip: 1,
-          orderBy: [{ key: "desc" }, { createdAt: "asc" }],
+          orderBy: [{ key: 'desc' }, { createdAt: 'asc' }],
         })
         .then((requests) => {
           return {
@@ -54,7 +69,7 @@ const requestRouter: FastifyPluginCallback<
   );
 
   api.patch(
-    "/:id",
+    '/:id',
     {
       schema: {
         params: SingleRequestQuerySchema,
@@ -75,7 +90,7 @@ const requestRouter: FastifyPluginCallback<
   );
 
   api.delete(
-    "/:id",
+    '/:id',
     { schema: { params: SingleRequestQuerySchema } },
     (req, rep) => {
       return api.prisma.request
@@ -86,10 +101,10 @@ const requestRouter: FastifyPluginCallback<
     }
   );
 
-  api.post("/", { schema: { body: CreateRequestSchema } }, (req, rep) => {
+  api.post('/', { schema: { body: CreateRequestSchema } }, (req, rep) => {
     const now = new Date();
     const key = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const requester = req.body.requester || "系統";
+    const requester = req.body.requester || '系統';
     return api.prisma.request.create({
       data: {
         key: key,
@@ -102,7 +117,7 @@ const requestRouter: FastifyPluginCallback<
     });
   });
 
-  api.post("/generate", { schema: { tags: ["request"] } }, (req, res) => {
+  api.post('/generate', { schema: { tags: ['request'] } }, (req, res) => {
     const createdAt = date.getRandomDate(new Date(2022, 6, 1), new Date());
     const key = new Date(
       createdAt.getFullYear(),
@@ -113,17 +128,17 @@ const requestRouter: FastifyPluginCallback<
     return api.prisma.configuration
       .findFirst({
         where: {
-          key: "accept",
+          key: 'accept',
         },
       })
       .then((config) => {
-        if (!config || config.value === "false")
-          return res.status(400).send({ message: "not accepting" });
+        if (!config || config.value === 'false')
+          return res.status(400).send({ message: 'not accepting' });
         return api.prisma.request
           .create({
             data: {
               title: faker.music.songName(),
-              requester: "unknown",
+              requester: 'unknown',
               key,
               createdAt,
               updatedAt,
