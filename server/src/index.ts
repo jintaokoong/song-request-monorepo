@@ -32,7 +32,11 @@ const prismaPlugin: FastifyPluginAsync = fp(async (server, options) => {
   });
 });
 
-const app = fastify().withTypeProvider<TypeBoxTypeProvider>();
+const app = fastify({
+  logger: {
+    redact: ['req.remoteAddress'],
+  },
+}).withTypeProvider<TypeBoxTypeProvider>();
 app.register(fastifyCors);
 app.register(prismaPlugin);
 app.register(swagger, {
