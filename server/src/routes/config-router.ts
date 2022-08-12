@@ -11,6 +11,9 @@ const configRouter: FastifyPluginCallback<
   TypeBoxTypeProvider
 > = (api, opts, done) => {
   api.addHook('preHandler', function (req, rep, done) {
+    if (req.method === 'GET') {
+      return done();
+    }
     const key = req.headers['x-api-key'];
     if (typeof key !== 'string') {
       rep.code(401);
@@ -37,33 +40,37 @@ const configRouter: FastifyPluginCallback<
         return { accept: config.value === 'true' };
       });
   });
-  api.post('/', { schema: { tags: ['config'] } }, (req, resp) => {
-    return api.prisma.configuration
-      .findFirst({
-        where: {
-          key: 'accept',
-        },
-      })
-      .then((config) => {
-        if (!config) {
-          return api.prisma.configuration.create({
-            data: {
-              key: 'accept',
-              value: 'true',
-            },
-          });
-        } else {
-          return api.prisma.configuration.update({
-            where: {
-              key: 'accept',
-            },
-            data: {
-              value: `${config.value !== 'true'}`,
-            },
-          });
-        }
-      });
-  });
+  api.post(
+    '/',
+    { schema: { tags: ['config'], security: [{ apiKey: [] }] } },
+    (req, resp) => {
+      return api.prisma.configuration
+        .findFirst({
+          where: {
+            key: 'accept',
+          },
+        })
+        .then((config) => {
+          if (!config) {
+            return api.prisma.configuration.create({
+              data: {
+                key: 'accept',
+                value: 'true',
+              },
+            });
+          } else {
+            return api.prisma.configuration.update({
+              where: {
+                key: 'accept',
+              },
+              data: {
+                value: `${config.value !== 'true'}`,
+              },
+            });
+          }
+        });
+    }
+  );
   done();
 };
 

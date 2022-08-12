@@ -7,7 +7,7 @@ import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import date from '../../utils/date';
 import { faker } from '@faker-js/faker';
 import { Type } from '@sinclair/typebox';
-import { last, tail } from 'ramda';
+import { last } from 'ramda';
 
 const FindRequestSchema = Type.Object({
   limit: Type.Number({
@@ -34,6 +34,9 @@ const requestRouter: FastifyPluginCallback<
   TypeBoxTypeProvider
 > = (api, opt, done) => {
   api.addHook('preHandler', function (req, rep, done) {
+    if (req.method === 'GET') {
+      return done();
+    }
     const key = req.headers['x-api-key'];
     if (typeof key !== 'string') {
       rep.code(401);
@@ -72,8 +75,10 @@ const requestRouter: FastifyPluginCallback<
     '/:id',
     {
       schema: {
+        tags: ['request'],
         params: SingleRequestQuerySchema,
         body: UpdateRequestBodySchema,
+        security: [{ apiKey: [] }],
       },
     },
     (req, rep) => {
@@ -91,7 +96,13 @@ const requestRouter: FastifyPluginCallback<
 
   api.delete(
     '/:id',
-    { schema: { params: SingleRequestQuerySchema } },
+    {
+      schema: {
+        tags: ['request'],
+        params: SingleRequestQuerySchema,
+        security: [{ apiKey: [] }],
+      },
+    },
     (req, rep) => {
       return api.prisma.request
         .delete({
@@ -101,52 +112,66 @@ const requestRouter: FastifyPluginCallback<
     }
   );
 
-  api.post('/', { schema: { body: CreateRequestSchema } }, (req, rep) => {
-    const now = new Date();
-    const key = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const requester = req.body.requester || '系統';
-    return api.prisma.request.create({
-      data: {
-        key: key,
-        title: req.body.title,
-        requester,
-        done: false,
-        createdAt: now,
-        updatedAt: now,
+  api.post(
+    '/',
+    {
+      schema: {
+        tags: ['request'],
+        body: CreateRequestSchema,
+        security: [{ apiKey: [] }],
       },
-    });
-  });
-
-  api.post('/generate', { schema: { tags: ['request'] } }, (req, res) => {
-    const createdAt = date.getRandomDate(new Date(2022, 6, 1), new Date());
-    const key = new Date(
-      createdAt.getFullYear(),
-      createdAt.getMonth(),
-      createdAt.getDate()
-    );
-    const updatedAt = date.getRandomDate(createdAt, new Date());
-    return api.prisma.configuration
-      .findFirst({
-        where: {
-          key: 'accept',
+    },
+    (req, rep) => {
+      const now = new Date();
+      const key = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const requester = req.body.requester || '系統';
+      return api.prisma.request.create({
+        data: {
+          key: key,
+          title: req.body.title,
+          requester,
+          done: false,
+          createdAt: now,
+          updatedAt: now,
         },
-      })
-      .then((config) => {
-        if (!config || config.value === 'false')
-          return res.status(400).send({ message: 'not accepting' });
-        return api.prisma.request
-          .create({
-            data: {
-              title: faker.music.songName(),
-              requester: 'unknown',
-              key,
-              createdAt,
-              updatedAt,
-            },
-          })
-          .then((req) => res.send(req));
       });
-  });
+    }
+  );
+
+  api.post(
+    '/generate',
+    { schema: { tags: ['request'], security: [{ apiKey: [] }] } },
+    (req, res) => {
+      const createdAt = date.getRandomDate(new Date(2022, 6, 1), new Date());
+      const key = new Date(
+        createdAt.getFullYear(),
+        createdAt.getMonth(),
+        createdAt.getDate()
+      );
+      const updatedAt = date.getRandomDate(createdAt, new Date());
+      return api.prisma.configuration
+        .findFirst({
+          where: {
+            key: 'accept',
+          },
+        })
+        .then((config) => {
+          if (!config || config.value === 'false')
+            return res.status(400).send({ message: 'not accepting' });
+          return api.prisma.request
+            .create({
+              data: {
+                title: faker.music.songName(),
+                requester: 'unknown',
+                key,
+                createdAt,
+                updatedAt,
+              },
+            })
+            .then((req) => res.send(req));
+        });
+    }
+  );
   done();
 };
 
