@@ -4,7 +4,7 @@ import {
   RawServerBase,
 } from 'fastify';
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import date from '../../utils/date';
+import date from '../utils/date';
 import { faker } from '@faker-js/faker';
 import { Type } from '@sinclair/typebox';
 import { last } from 'ramda';

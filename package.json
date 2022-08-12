@@ -3,7 +3,8 @@
   "scripts": {
     "server": "yarn --cwd server dev",
     "client": "yarn --cwd client dev",
-    "build:client": "yarn --cwd client build"
+    "build:client": "yarn --cwd client build",
+    "build:server": "yarn --cwd server build"
   },
   "workspaces": [
     "server",
