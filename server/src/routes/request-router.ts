@@ -122,19 +122,31 @@ const requestRouter: FastifyPluginCallback<
       },
     },
     (req, rep) => {
-      const now = new Date();
-      const key = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const requester = req.body.requester || '系統';
-      return api.prisma.request.create({
-        data: {
-          key: key,
-          title: req.body.title,
-          requester,
-          done: false,
-          createdAt: now,
-          updatedAt: now,
-        },
-      });
+      return api.prisma.configuration
+        .findFirst({
+          where: { key: 'accept' },
+        })
+        .then((accept) => {
+          if (accept == null || accept.value !== 'true')
+            throw new Error('not accepting');
+          const now = new Date();
+          const key = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          );
+          const requester = req.body.requester || '系統';
+          return api.prisma.request.create({
+            data: {
+              key: key,
+              title: req.body.title,
+              requester,
+              done: false,
+              createdAt: now,
+              updatedAt: now,
+            },
+          });
+        });
     }
   );
 
