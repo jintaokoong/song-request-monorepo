@@ -25,7 +25,7 @@ declare module 'fastify' {
 dotenv.config();
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
-const HOST = PORT === 4000 ? '127.0.0.1' : '0.0.0.0';
+const HOST = PORT === 4000 ? '127.0.0.1' : '::';
 
 const prismaPlugin: FastifyPluginAsync = fp(async (server, options) => {
   await prisma.$connect();
