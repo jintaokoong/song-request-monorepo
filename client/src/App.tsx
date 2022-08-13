@@ -22,6 +22,8 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import {
   InfiniteData,
   useInfiniteQuery,
@@ -57,7 +59,9 @@ import array from './utils/array';
 import date from './utils/date';
 import req from './utils/req';
 import DialogTitle from '@mui/material/DialogTitle';
-import DialogContentText from '@mui/material/DialogContentText';
+import copy from 'copy-to-clipboard';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { snackbarAtom } from './states/snackbar-atom';
 
 const createListingSchema = <T,>(schema: z.ZodType<T>) => {
   return z.object({
@@ -220,6 +224,8 @@ const RequestItem = ({ id, done, title, requester }: Omit<Request, 'key'>) => {
   );
   /* delete confirmation */
   const [pending, setPending] = useState(false);
+  /* copy state updater */
+  const setOpen = useSetAtom(snackbarAtom);
 
   return (
     <ListItem
@@ -255,7 +261,16 @@ const RequestItem = ({ id, done, title, requester }: Omit<Request, 'key'>) => {
               horizontal: 'right',
             }}
           >
-            <MenuItem onClick={onMenuClick()}>
+            <MenuItem
+              onClick={onMenuClick(() => {
+                setOpen(true);
+                copy(title);
+                const t = setTimeout(() => {
+                  setOpen(false);
+                  clearTimeout(t);
+                }, 1000);
+              })}
+            >
               <ListItemIcon>
                 <ContentCopyIcon fontSize={'small'} />
               </ListItemIcon>
@@ -478,6 +493,24 @@ const ApiKeyModal = () => {
   );
 };
 
+const CopySnackbar = () => {
+  const open = useAtomValue(snackbarAtom);
+  return (
+    <Snackbar
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      sx={{ bottom: { xs: 90 } }}
+      open={open}
+      children={
+        <Alert
+          severity={'success'}
+          sx={{ width: '420px' }}
+          children={'複製成功!'}
+        />
+      }
+    />
+  );
+};
+
 // a no op function
 const noop = () => {};
 
@@ -554,6 +587,7 @@ function App() {
       </List>
       <Control />
       <ApiKeyModal />
+      <CopySnackbar />
     </div>
   );
 }
