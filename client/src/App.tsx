@@ -559,32 +559,38 @@ function App() {
       <section className={'pt-5 p-3'}>
         <RequestInput />
       </section>
-      {length(requests) === 0 && (
+      {length(requests) === 0 ? (
         <section
-          className={'flex flex-col items-center gap-3 text-gray-500 py-4'}
+          className={
+            'flex flex-col items-center justify-center gap-3 text-gray-500 py-4 min-h-[80vh]'
+          }
         >
           <InfoRoundedIcon fontSize={'large'} />
           <p>暫無歌曲</p>
         </section>
+      ) : (
+        <List className={'min-h-[80vh]'}>
+          {map(
+            ({ key, data }) => (
+              <li key={key}>
+                <ul>
+                  <ListSubheader>{key}</ListSubheader>
+                  {map(
+                    (request) => (
+                      <RequestItem
+                        key={request.id}
+                        {...omit(['key'], request)}
+                      />
+                    ),
+                    data
+                  )}
+                </ul>
+              </li>
+            ),
+            requests
+          )}
+        </List>
       )}
-      <List>
-        {map(
-          ({ key, data }) => (
-            <li key={key}>
-              <ul>
-                <ListSubheader>{key}</ListSubheader>
-                {map(
-                  (request) => (
-                    <RequestItem key={request.id} {...omit(['key'], request)} />
-                  ),
-                  data
-                )}
-              </ul>
-            </li>
-          ),
-          requests
-        )}
-      </List>
       <Control />
       <ApiKeyModal />
       <CopySnackbar />
