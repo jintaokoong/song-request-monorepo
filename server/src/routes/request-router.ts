@@ -130,11 +130,7 @@ const requestRouter: FastifyPluginCallback<
           if (accept == null || accept.value !== 'true')
             throw new Error('not accepting');
           const now = new Date();
-          const key = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate()
-          );
+          const key = date.getDateInTaipei(now);
           const requester = req.body.requester || '系統';
           return api.prisma.request.create({
             data: {
